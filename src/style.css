@@ -280,6 +280,21 @@ nav button.active .ic { filter: none; }
 .dressing-row:last-child { border-bottom: none; }
 .dressing-time { font-weight: 800; font-size: 14px; min-width: 48px; color: var(--rose-deep); }
 
+/* ---- medicação / chips de horário ---- */
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; padding: 6px 8px 6px 12px; border-radius: 20px; background: var(--pink-soft); border: 1px solid var(--border-strong); color: var(--rose-deep); }
+.chip-del { background: none; border: none; color: var(--rose-deep); font-size: 13px; cursor: pointer; padding: 2px 4px; opacity: .7; }
+.chip-del:active { opacity: 1; }
+.suggest-chip { font-size: 11.5px; font-weight: 700; padding: 6px 12px; border-radius: 20px; background: var(--bg-elevated); border: 1px dashed var(--border-strong); color: var(--text-dim); cursor: pointer; }
+.med-card { padding: 13px 16px; border-bottom: 1px solid var(--border); }
+.med-card:last-child { border-bottom: none; }
+.med-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.med-name { font-weight: 800; font-size: 14.5px; }
+.med-note { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+.med-times { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.med-time-chk { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 20px; border: 1px solid var(--border-strong); background: var(--bg-elevated); color: var(--text-dim); cursor: pointer; }
+.med-time-chk.taken { background: var(--gradient-main); border-color: transparent; color: #fff; }
+
 /* ---- toggle switch ---- */
 .switch { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }

@@ -37,12 +37,26 @@ export interface DressingEntry {
   done: boolean;
 }
 
+/**
+ * Medicação/suplementos, com horários diários para lembretes. `id` é a
+ * identidade estável da entrada (edições são feitas in-place, ao contrário
+ * de peso/medidas/notas, que não têm um id natural e por isso usam
+ * tombstone+re-add — ver merge.ts).
+ */
+export interface MedicationEntry extends Tombstonable {
+  id: string;
+  name: string;
+  note?: string; // ex: "1 comprimido", "2x ao dia"
+  times: string[]; // HH:MM, uma ou mais tomas por dia
+}
+
 export interface DayRecord {
   meals: Record<string, boolean>; // meal option id -> comido
   water: number; // copos
   exercisesDone: Record<string, string[]>; // workoutId -> exercise ids feitos
   trainingDone: { workoutId: string; done: boolean } | null;
   dressings: DressingEntry[];
+  medsTaken: Record<string, boolean>; // `${medicationId}::${time}` -> tomado
 }
 
 export interface MounjaroInfo {
@@ -87,6 +101,10 @@ export const DEFAULT_SETTINGS: Settings = {
   carbGoal: 90,
   fatGoal: 40,
   notificationsEnabled: false,
-  reminderTimes: { water: ['11:00', '15:00'], meals: ['08:00', '13:00', '19:00'], training: ['17:30'] },
+  reminderTimes: {
+    water: ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00'],
+    meals: ['08:00', '13:00', '19:00'],
+    training: ['17:30']
+  },
   reducedMotion: false
 };

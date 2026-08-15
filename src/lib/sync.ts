@@ -1,6 +1,6 @@
 import { supabase, isCloudConfigured } from './supabaseClient';
 import { allKeys, rawGet, rawSet } from './storage';
-import type { DayRecord, WeightEntry, MeasurementEntry, NoteEntry } from './types';
+import type { DayRecord, WeightEntry, MeasurementEntry, MedicationEntry, NoteEntry } from './types';
 import type { ExerciseLogEntry } from './storage';
 import { lastSyncedAt, setLastSyncedAt, touchedAt, markTouched } from './meta';
 import { mergeDayRecords, mergeEntryLists } from './merge';
@@ -100,6 +100,18 @@ function mergeConflicting(key: string, local: unknown, remote: unknown): unknown
       remote as NoteEntry[],
       (e) => `${e.date}_${e.text}`,
       (e) => e.date
+    );
+  }
+  if (key === 'ns_medications') {
+    // Medicações têm um id estável (ao contrário de peso/medidas/notas),
+    // por isso a chave de merge é o próprio id, não um hash de conteúdo —
+    // isto permite edições in-place (nome/nota/horários) resolvidas por
+    // last-write-wins, em vez de tombstone+re-add.
+    return mergeEntryLists(
+      local as MedicationEntry[],
+      remote as MedicationEntry[],
+      (e) => e.id,
+      (e) => e.name
     );
   }
   if (LOAD_KEY_RE.test(key)) {

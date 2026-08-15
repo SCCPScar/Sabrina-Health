@@ -1,4 +1,4 @@
-import { getSettings } from './storage';
+import { getSettings, getMedications } from './storage';
 
 let checkInterval: ReturnType<typeof setInterval> | undefined;
 const firedToday = new Set<string>();
@@ -40,6 +40,14 @@ export function startReminderLoop(): void {
     if (settings.reminderTimes.training.includes(hhmm) && !firedToday.has(`train_${todayKey}`)) {
       firedToday.add(`train_${todayKey}`);
       notify('Nova Sabrina 💪', 'Um bocadinho de movimento em casa, quando puderes.');
+    }
+
+    for (const med of getMedications()) {
+      if (!med.times.includes(hhmm)) continue;
+      const fireKey = `med_${med.id}_${todayKey}`;
+      if (firedToday.has(fireKey)) continue;
+      firedToday.add(fireKey);
+      notify('Nova Sabrina 💊', `Hora de tomar: ${med.name}${med.note ? ` (${med.note})` : ''}`);
     }
   }, 30_000);
 }

@@ -1,4 +1,4 @@
-import type { DayRecord, DressingEntry, MeasurementEntry, NoteEntry, Settings, WeightEntry, Tombstonable } from './types';
+import type { DayRecord, DressingEntry, MeasurementEntry, MedicationEntry, NoteEntry, Settings, WeightEntry, Tombstonable } from './types';
 import { DEFAULT_SETTINGS } from './types';
 import { visible, withAdded, withSoftDeleted } from './tombstoneList';
 
@@ -62,7 +62,7 @@ export function allKeys(): string[] {
 
 // ---- Day records (refeições, água, exercícios, treino, curativos) ----
 
-const emptyDay = (): DayRecord => ({ meals: {}, water: 0, exercisesDone: {}, trainingDone: null, dressings: [] });
+const emptyDay = (): DayRecord => ({ meals: {}, water: 0, exercisesDone: {}, trainingDone: null, dressings: [], medsTaken: {} });
 
 export function getDay(date: string): DayRecord {
   const d = rawGet<Partial<DayRecord>>(`${PFX}_day_${date}`, {});
@@ -142,6 +142,28 @@ export function deleteDressing(date: string, id: string): void {
   const day = getDay(date);
   day.dressings = day.dressings.filter((d) => d.id !== id);
   setDay(date, day);
+}
+
+// ---- Toma diária de medicação ----
+
+function medKey(medicationId: string, time: string): string {
+  return `${medicationId}::${time}`;
+}
+
+export function getMedsTaken(date: string): Record<string, boolean> {
+  return getDay(date).medsTaken;
+}
+
+export function isMedTaken(date: string, medicationId: string, time: string): boolean {
+  return Boolean(getMedsTaken(date)[medKey(medicationId, time)]);
+}
+
+export function toggleMedTaken(date: string, medicationId: string, time: string): boolean {
+  const day = getDay(date);
+  const key = medKey(medicationId, time);
+  day.medsTaken[key] = !day.medsTaken[key];
+  setDay(date, day);
+  return day.medsTaken[key];
 }
 
 // ---- Peso ----
@@ -229,6 +251,49 @@ export function deleteNote(visibleIndex: number): void {
     `${PFX}_notes`,
     withSoftDeleted(getNotesRaw(), visibleIndex, (a, b) => a.date === b.date && a.text === b.text)
   );
+}
+
+// ---- Medicação / suplementos ----
+// Ao contrário de peso/medidas/notas (sem id natural, por isso identificadas
+// por conteúdo), cada medicação tem um `id` estável — edições mudam os
+// campos in-place em vez de tombstone+re-add, e o merge (ver merge.ts) usa
+// esse id diretamente como chave.
+
+function getMedicationsRaw(): MedicationEntry[] {
+  return rawGet<MedicationEntry[]>(`${PFX}_medications`, []);
+}
+
+export function getMedications(): MedicationEntry[] {
+  return visible(getMedicationsRaw());
+}
+
+function generateId(): string {
+  return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function addMedication(entry: { name: string; note?: string; times: string[] }): MedicationEntry {
+  const raw = getMedicationsRaw();
+  const created: MedicationEntry = { ...entry, id: generateId(), updatedAt: Date.now() };
+  rawSet(`${PFX}_medications`, [created, ...raw]);
+  return created;
+}
+
+export function updateMedication(id: string, patch: { name: string; note?: string; times: string[] }): void {
+  const raw = getMedicationsRaw();
+  const idx = raw.findIndex((m) => m.id === id && !m.deleted);
+  if (idx === -1) return;
+  const next = [...raw];
+  next[idx] = { ...next[idx], ...patch, updatedAt: Date.now() };
+  rawSet(`${PFX}_medications`, next);
+}
+
+export function deleteMedication(id: string): void {
+  const raw = getMedicationsRaw();
+  const idx = raw.findIndex((m) => m.id === id && !m.deleted);
+  if (idx === -1) return;
+  const next = [...raw];
+  next[idx] = { ...next[idx], deleted: true, updatedAt: Date.now() };
+  rawSet(`${PFX}_medications`, next);
 }
 
 // ---- Definições ----

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { mergeDayRecords, mergeEntryLists } from '../src/lib/merge';
-import type { DayRecord, WeightEntry, DressingEntry } from '../src/lib/types';
+import type { DayRecord, WeightEntry, DressingEntry, MedicationEntry } from '../src/lib/types';
 
 function day(partial: Partial<DayRecord>): DayRecord {
-  return { meals: {}, water: 0, exercisesDone: {}, trainingDone: null, dressings: [], ...partial };
+  return { meals: {}, water: 0, exercisesDone: {}, trainingDone: null, dressings: [], medsTaken: {}, ...partial };
 }
 
 function weight(kg: number, date: string, updatedAt: number, deleted = false): WeightEntry {
@@ -12,6 +12,10 @@ function weight(kg: number, date: string, updatedAt: number, deleted = false): W
 
 function dressing(id: string, time: string, label: string, done: boolean): DressingEntry {
   return { id, time, label, done };
+}
+
+function medication(id: string, name: string, times: string[], updatedAt: number, deleted = false): MedicationEntry {
+  return { id, name, times, updatedAt, deleted };
 }
 
 describe('mergeDayRecords', () => {
@@ -53,6 +57,39 @@ describe('mergeDayRecords', () => {
     expect(merged).toHaveLength(2);
     expect(merged.find((d) => d.id === 'd1')?.done).toBe(true);
     expect(merged.find((d) => d.id === 'd2')?.done).toBe(false);
+  });
+
+  it('unions medsTaken checkmarks from both sides, same as meals', () => {
+    const local = day({ medsTaken: { 'm1::08:00': true } });
+    const remote = day({ medsTaken: { 'm1::20:00': true, 'm2::08:00': false } });
+    expect(mergeDayRecords(local, remote).medsTaken).toEqual({ 'm1::08:00': true, 'm1::20:00': true, 'm2::08:00': false });
+  });
+});
+
+describe('mergeEntryLists — medications merged by stable id (not content hash)', () => {
+  const keyFn = (e: MedicationEntry) => e.id;
+  const dateFn = (e: MedicationEntry) => e.name;
+
+  it('an in-place edit (name/times changed, same id) resolves by last-write-wins', () => {
+    const local = [medication('m1', 'Vitamina D', ['08:00'], 300)]; // edited locally after sync
+    const remote = [medication('m1', 'Vitamina D', ['08:00', '20:00'], 100)]; // stale copy from before the edit
+    const merged = mergeEntryLists(local, remote, keyFn, dateFn);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].times).toEqual(['08:00']);
+  });
+
+  it('a medication added on one device survives merging against the other device’s own addition', () => {
+    const local = [medication('m1', 'Vitamina B12', ['08:00'], 100)];
+    const remote = [medication('m2', 'Cálcio', ['09:00', '21:00'], 150)];
+    const merged = mergeEntryLists(local, remote, keyFn, dateFn);
+    expect(merged.map((m) => m.id).sort()).toEqual(['m1', 'm2']);
+  });
+
+  it('a delete on one device is not resurrected by a stale remote copy', () => {
+    const local = [medication('m1', 'Multivitamínico', ['08:00'], 300, true)];
+    const remote = [medication('m1', 'Multivitamínico', ['08:00'], 100, false)];
+    const merged = mergeEntryLists(local, remote, keyFn, dateFn);
+    expect(merged[0].deleted).toBe(true);
   });
 });
 

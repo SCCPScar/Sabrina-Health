@@ -20,8 +20,9 @@ src/
   data/        Exercícios (só casa), plano de treino semanal (Normal + Suave/Recuperação),
                plano alimentar (porções em chávenas/colheres, sem pesar), cirurgias previstas
   lib/         storage, merge (resolução de conflitos), datas (contagem Turquia), cálculo
-               calórico, cliente Supabase, sync, notificações
-  ui/          nav + 6 separadores (Hoje, Treino, Comer, Progresso, Cirurgia, Definições) + componentes
+               calórico, cliente Supabase, sync, notificações (água + medicação)
+  ui/          nav + 7 separadores (Hoje, Treino, Comer, Remédios, Progresso, Cirurgia,
+               Definições) + componentes
 supabase/schema.sql   Esquema para sincronização cloud (tabela chave/valor + RLS)
 scripts/stamp-sw.mjs  Dá à cache do service worker um nome único por build
 tests/                Testes Vitest (storage, merge/sync, dados de treino e dieta, datas)
@@ -67,6 +68,7 @@ Os planos de treino e alimentação são pensados especificamente para o context
 
 - **Treino** — só em casa (sem ginásio), cada dia tem uma versão Normal e uma versão Suave/Recuperação, sem exercícios de alto impacto ou core agressivo, pensados para poderem ser trocados livremente nas semanas à volta das cirurgias.
 - **Alimentação** — porções sempre em chávenas, colheres e unidades, nunca em gramas. Foco nos alimentos que a Sabrina já come (granola, chia, sementes de abóbora, psílio, aveia), porções pequenas e alta proteína.
+- **Remédios** — lista de medicação/suplementos com horários, checklist diário de tomas e lembretes por notificação; os horários de água também se configuram aqui. Sugestões rápidas para suplementos comuns pós-bariátrica (B12, multivitamínico, vitamina D, cálcio, proteína).
 - **Cirurgia & Recuperação** — só uma lista informativa das cirurgias previstas e uma agenda simples de curativos. Sem qualquer lógica clínica — não substitui indicação médica.
 
 Todos os valores de kcal/macros são estimativas de referência para acompanhamento pessoal, não dados de tabela nutricional certificada.

@@ -13,6 +13,13 @@ import {
   addDressing,
   toggleDressing,
   deleteDressing,
+  getMedications,
+  addMedication,
+  updateMedication,
+  deleteMedication,
+  getMedsTaken,
+  isMedTaken,
+  toggleMedTaken,
   getWeights,
   addWeight,
   deleteWeight,
@@ -110,6 +117,43 @@ describe('curativos (dressings)', () => {
   });
 });
 
+describe('medicação / suplementos', () => {
+  it('adds a medication and lists it', () => {
+    addMedication({ name: 'Vitamina B12', note: '1 comprimido', times: ['08:00'] });
+    const meds = getMedications();
+    expect(meds).toHaveLength(1);
+    expect(meds[0]).toMatchObject({ name: 'Vitamina B12', note: '1 comprimido', times: ['08:00'] });
+    expect(meds[0].id).toBeDefined();
+  });
+
+  it('edits a medication in place, keeping the same id', () => {
+    const created = addMedication({ name: 'Cálcio', times: ['09:00'] });
+    updateMedication(created.id, { name: 'Cálcio', note: '2x ao dia', times: ['09:00', '21:00'] });
+    const meds = getMedications();
+    expect(meds).toHaveLength(1);
+    expect(meds[0].id).toBe(created.id);
+    expect(meds[0].times).toEqual(['09:00', '21:00']);
+  });
+
+  it('soft-deletes a medication instead of physically removing it, for sync safety', () => {
+    const created = addMedication({ name: 'Multivitamínico', times: ['08:00'] });
+    deleteMedication(created.id);
+    expect(getMedications()).toHaveLength(0);
+    const raw = rawGet<{ id: string; deleted?: boolean }[]>('ns_medications', []);
+    expect(raw.find((m) => m.id === created.id)?.deleted).toBe(true);
+  });
+
+  it('tracks which doses were taken per day, independently per medication and time', () => {
+    const med = addMedication({ name: 'Vitamina D', times: ['08:00', '20:00'] });
+    const date = '2026-01-01';
+    expect(isMedTaken(date, med.id, '08:00')).toBe(false);
+    expect(toggleMedTaken(date, med.id, '08:00')).toBe(true);
+    expect(isMedTaken(date, med.id, '08:00')).toBe(true);
+    expect(isMedTaken(date, med.id, '20:00')).toBe(false);
+    expect(getMedsTaken(date)).toEqual({ [`${med.id}::08:00`]: true });
+  });
+});
+
 describe('weights', () => {
   it('adds newest weight first and deletes by (visible) index', () => {
     addWeight(75, '2026-01-01');
@@ -181,6 +225,8 @@ describe('backup export/import', () => {
     toggleMeal('2026-01-01', 'pa1');
     setWater('2026-01-01', 5);
     addDressing('2026-01-01', '09:00', 'Curativo abdominal');
+    const med = addMedication({ name: 'Vitamina D', times: ['08:00'] });
+    toggleMedTaken('2026-01-01', med.id, '08:00');
     addNote('Dia bom', '2026-01-01');
     saveSettings({ waterGoalMl: 1800 });
 
@@ -198,13 +244,17 @@ describe('backup export/import', () => {
     expect(day.meals.pa1).toBe(true);
     expect(day.water).toBe(5);
     expect(day.dressings).toHaveLength(1);
+    expect(day.medsTaken[`${med.id}::08:00`]).toBe(true);
     expect(getExerciseLoads('flexao_parede')).toHaveLength(1);
+    expect(getMedications()).toHaveLength(1);
+    expect(getMedications()[0].name).toBe('Vitamina D');
     expect(getNotes()).toHaveLength(1);
     expect(getSettings().waterGoalMl).toBe(1800);
 
     // Importing the same backup again must not duplicate anything.
     importBackup(backup);
     expect(getWeights()).toHaveLength(1);
+    expect(getMedications()).toHaveLength(1);
     expect(getNotes()).toHaveLength(1);
   });
 

@@ -1,7 +1,6 @@
 import type { Tab } from '../nav';
 import { getSettings, saveSettings, exportBackup, importBackup } from '../../lib/storage';
 import { isCloudConfigured, getSession, signInWithEmail, signOut, fullSync } from '../../lib/sync';
-import { requestNotificationPermission } from '../../lib/notifications';
 import { refreshActive } from '../nav';
 import { showToast } from '../components/toast';
 
@@ -72,13 +71,8 @@ export const settingsTab: Tab = {
 
       <section>
         <div class="sec-title">🔔 Notificações</div>
-        <div class="row" style="cursor:default">
-          <div class="rtxt"><strong>Ativar lembretes</strong><small>Água, refeições e treino</small></div>
-          <label class="switch"><input type="checkbox" id="s-notif" ${settings.notificationsEnabled ? 'checked' : ''}/><span class="slider"></span></label>
-        </div>
-        <div class="alert" style="margin:10px 14px">
-          <span>🍏</span>
-          <span>No iPhone (Safari/PWA), notificações só funcionam com a app aberta em primeiro plano — o iOS não permite lembretes agendados em segundo plano sem um servidor de push dedicado.</span>
+        <div style="padding:12px 16px;font-size:12.5px;color:var(--text-dim);line-height:1.6">
+          Os lembretes de água e de medicação agora vivem na aba <strong>💊 Remédios</strong> — é lá que ativas as notificações e defines os horários.
         </div>
       </section>
 
@@ -218,12 +212,6 @@ function wireEvents(root: HTMLElement) {
       proteinGoal: Number((root.querySelector('#s-protein') as HTMLInputElement).value) || 89
     });
     showToast('Metas guardadas 🌱');
-  });
-
-  root.querySelector('#s-notif')?.addEventListener('change', async (e) => {
-    const checked = (e.target as HTMLInputElement).checked;
-    if (checked) await requestNotificationPermission();
-    saveSettings({ notificationsEnabled: checked });
   });
 
   root.querySelector('#s-motion')?.addEventListener('change', (e) => {

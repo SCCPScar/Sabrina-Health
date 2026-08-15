@@ -26,7 +26,8 @@ export function mergeDayRecords(a: DayRecord, b: DayRecord): DayRecord {
     water: Math.max(a.water ?? 0, b.water ?? 0),
     exercisesDone: unionStringArrays(a.exercisesDone, b.exercisesDone),
     trainingDone: a.trainingDone?.done ? a.trainingDone : b.trainingDone?.done ? b.trainingDone : null,
-    dressings: mergeDressings(a.dressings ?? [], b.dressings ?? [])
+    dressings: mergeDressings(a.dressings ?? [], b.dressings ?? []),
+    medsTaken: unionBooleans(a.medsTaken, b.medsTaken)
   };
 }
 

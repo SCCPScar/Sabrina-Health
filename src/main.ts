@@ -6,6 +6,7 @@ import { initNav, refreshActive } from './ui/nav';
 import { todayTab } from './ui/tabs/today';
 import { trainingTab } from './ui/tabs/training';
 import { dietTab } from './ui/tabs/diet';
+import { medicationsTab } from './ui/tabs/medications';
 import { progressTab } from './ui/tabs/progress';
 import { surgeryTab } from './ui/tabs/surgery';
 import { settingsTab } from './ui/tabs/settings';
@@ -14,7 +15,7 @@ import { showToast } from './ui/components/toast';
 const app = document.getElementById('app') as HTMLElement;
 app.innerHTML = '';
 
-initNav(app, [todayTab, trainingTab, dietTab, progressTab, surgeryTab, settingsTab], 'hoje');
+initNav(app, [todayTab, trainingTab, dietTab, medicationsTab, progressTab, surgeryTab, settingsTab], 'hoje');
 
 registerServiceWorker();
 startReminderLoop();
