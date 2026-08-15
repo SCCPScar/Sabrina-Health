@@ -10,6 +10,7 @@ Não é um produto genérico de fitness — é uma versão pessoal, suave e acol
 - Estado local em `localStorage` (fonte de verdade), tipado em `src/lib/storage.ts`.
 - Sincronização opcional entre dispositivos via Supabase (`src/lib/sync.ts`), com merge automático em conflitos. Sem configuração, a app funciona 100% local/offline.
 - PWA instalável: `public/manifest.webmanifest` + `public/sw.js` (service worker escrito à mão, cache-first).
+- App Android nativa opcional via [Capacitor](https://capacitorjs.com) (`android/`) — ver secção própria abaixo.
 - Testes: Vitest (`npm test`).
 - Deploy: GitHub Pages via GitHub Actions.
 
@@ -61,6 +62,24 @@ Sem `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` definidos, a app funciona intei
 **4. Copiar as chaves** — Project Settings → API → `Project URL` e `anon public key`. Cola-os em `.env` local (ver `.env.example`) e/ou nos secrets do GitHub Actions.
 
 `VITE_SUPABASE_URL` e a `anon key` são seguros para expor publicamente no bundle — é o que a Supabase espera, e o acesso de cada utilizador é restringido pelas políticas de Row Level Security em `schema.sql` (`auth.uid() = user_id`). A `service_role key` **nunca** deve ser usada neste projeto.
+
+## App Android instalável (.apk)
+
+Além da PWA, o projeto já está preparado com [Capacitor](https://capacitorjs.com) para gerar uma app Android nativa de verdade — um `.apk` que a Sabrina descarrega e instala diretamente, sem Play Store. O projeto nativo já existe em `android/`, com o ícone, o ecrã de arranque e as notificações (via `@capacitor/local-notifications`, que funciona de forma fiável dentro da app — ao contrário da API de notificações do browser) já ligados à identidade da Nova Sabrina.
+
+**Duas formas de obter o `.apk`, por ordem de facilidade:**
+
+1. **[PWABuilder.com](https://www.pwabuilder.com)** — cola o URL do GitHub Pages já publicado (`https://<utilizador>.github.io/Sabrina-Health/`), separador Android, gera o pacote. Não precisas de instalar nada. Só funciona depois do site estar publicado (ver secção acima).
+2. **Android Studio** (mais controlo, ícone/nome/tema já vêm configurados):
+   ```bash
+   npm run build:android   # build web + sincroniza para android/
+   npm run android:open    # abre o projeto no Android Studio
+   ```
+   Depois, em Android Studio: **Build → Build Bundle(s)/APK(s) → Build APK(s)**. O `.apk` fica em `android/app/build/outputs/apk/debug/`. Para uma versão "release" (mais otimizada, pedida ao instalar), usa **Build → Generate Signed Bundle/APK**.
+
+Sempre que houver alterações ao código, `npm run build:android` volta a sincronizar a versão mais recente para o projeto nativo — os dados da Sabrina continuam no `localStorage` do telemóvel dela, tal como na PWA, por isso uma nova instalação do `.apk` por cima da anterior nunca lhe apaga nada.
+
+> Nota: este ambiente de desenvolvimento não tem acesso ao Android SDK (rede restrita), por isso o `.apk` não pôde ser compilado diretamente aqui — mas o projeto Capacitor está validado e pronto a compilar em qualquer máquina com Android Studio.
 
 ## Sobre o conteúdo
 

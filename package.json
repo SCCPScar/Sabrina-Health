@@ -10,12 +10,19 @@
     "postbuild": "node scripts/stamp-sw.mjs",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:android": "cross-env VITE_BASE_PATH=/ npm run build && cap sync android",
+    "android:open": "cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/local-notifications": "^8.3.0",
     "@supabase/supabase-js": "^2.45.4"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
+    "cross-env": "^10.1.0",
     "jsdom": "^25.0.1",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
